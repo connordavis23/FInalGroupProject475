@@ -13,7 +13,7 @@ library(fpp3)
 This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
 ```{r}
 credits <- read.csv(file = "credit.csv")
-credits$period <- 1:492
+credits$period <- 492:1
 credits <- tsibble(credits, index = period)
 
 
@@ -61,6 +61,7 @@ fit %>%
   select(arima013) %>%
   gg_tsresiduals(lag = 48)
 
+
 #for select put your best model
 
 forecast(fit, h = 12) %>%
@@ -70,7 +71,7 @@ forecast(fit, h = 12) %>%
 pred <- fit %>%
   forecast(train_df)
 pred <- pred$.mean
-pred
+
 ```
 
 Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
