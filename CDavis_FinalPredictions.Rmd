@@ -29,11 +29,9 @@ library(kernlab)
 library(fpp3)
 ```
 
-**I made a copy of the `credit.csv` named `credit_copy.csv` before I added the file to the github and it lived in my `BAS 475` file**
 
 ```{r}
-
-credits <- read.csv("BAS 475/credit_copy.csv")
+credits <- read.csv("credit.csv")
 credits$period <- 1:492
 credits <- tsibble(credits, index = period)
 autoplot(credits)
@@ -92,10 +90,13 @@ forecast(fit, h = 12) %>%
   filter(.model == 'arima312') %>%
   autoplot(train_df)
 ```
+
 ```{r}
 pred <- fit %>%
   forecast(train_df)
 pred <- pred$.mean
+pred <- pred[1:12]
+pred
 ```
 
 
@@ -107,5 +108,19 @@ rmse <- function(y_pred, y_actual) {
 
 ```{r}
 rmse(pred, test_df$credit_in_millions)
+```
+```{r}
+predictions <- data.frame(
+  Month = test_df$period,
+  CreditPredictions = pred
+)
+
+# Change FILENAME.csv to a nice name to keep organized
+# Don't lose good predictions because of poor naming
+write.csv(
+  predictions,
+  file = "predictions.csv",
+  row.names = FALSE
+)
 ```
 
