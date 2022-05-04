@@ -16,13 +16,14 @@ library(fpp3)
 
 ```{r}
 credits <- read.csv("credit.csv")
-credits$period <- 1:492
+credits$period <- 492:1
 credits <- tsibble(credits, index= period)
 autoplot(credits)
 ```
 
 .
 ```{r}
+credits <- rename(credits,credit_in_millions =  ï..credit_in_millions)
 credits <- credits %>%
   mutate(diff_series = difference(credit_in_millions))
 
