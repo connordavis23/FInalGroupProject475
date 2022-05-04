@@ -1,0 +1,91 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
+
+Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Ctrl+Shift+Enter*. 
+```{r}
+library(tsibble)
+library(ggplot2)
+library(dplyr)
+library(fpp3)
+```
+
+
+```{r}
+credits <- read.csv("credit.csv")
+credits$period <- 1:492
+credits <- tsibble(credits, index= period)
+autoplot(credits)
+```
+
+.
+```{r}
+credits <- credits %>%
+  mutate(diff_series = difference(credit_in_millions))
+
+credits %>%
+  autoplot(diff_series)
+
+```
+```{r}
+train_df <- head(credits, nrow(credits) - 12)
+test_df <- tail(credits, 12)
+```
+
+```{r}
+fit <- train_df %>%
+  model(ARIMA(credit_in_millions))
+report(fit)
+
+fit <- train_df %>%
+  stretch_tsibble(.step = 24, .init = 48) %>%
+  model(
+    arima100 = ARIMA(credit_in_millions ~ pdq(1, 0, 0) + PDQ(0, 1, 1)),
+    arima212 = ARIMA(credit_in_millions ~ pdq(2, 1, 2) + PDQ(0, 1, 1)),
+    arima012 = ARIMA(credit_in_millions ~ pdq(0, 1, 2) + PDQ(0, 1, 1))
+  )
+
+fit %>%
+  forecast(h = 12) %>%
+  accuracy(train_df) %>%
+  arrange(RMSE)
+```
+
+```{r}
+fit <- train_df %>% 
+  model(arima212 = ARIMA(credit_in_millions ~ pdq(2, 1, 2) + PDQ(0, 1, 1)))
+
+report(fit)
+```
+
+```{r}
+fit %>%
+  select(arima212) %>%
+  gg_tsresiduals(lag = 48)
+```
+
+```{r}
+forecast(fit, h = 12) %>%
+  filter(.model == 'arima212') %>%
+  autoplot(train_df)
+```
+
+```{r}
+pred <- fit %>%
+  forecast(train_df)
+pred <- pred$.mean
+```
+
+```{r}
+rmse <- function(y_pred, y_actual) {
+  sqrt(mean((y_pred - y_actual)^2))
+}
+```
+
+```{r}
+rmse(pred, test_df$credit_in_millions)
+```
+
